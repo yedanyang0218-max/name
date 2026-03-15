@@ -1,0 +1,1651 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HiUI RN - IR Interactive Prototype</title>
+    <style>
+      :root {
+        --bg: #f5f6fa;
+        --card: #ffffff;
+        --line: #ebedf0;
+        --text: #1f2733;
+        --text-secondary: #5f6a7a;
+        --text-light: #9299a6;
+        --orange: #ff6900;
+        --orange-soft: #fff5ef;
+        --orange-strong: #ff7a1a;
+        --green: #2cc56f;
+        --blue: #4c7dff;
+        --shadow: 0 18px 60px rgba(40, 56, 88, 0.18), 0 2px 10px rgba(31, 39, 51, 0.08);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background:
+          radial-gradient(circle at top left, rgba(255, 170, 130, 0.18), transparent 28%),
+          linear-gradient(180deg, #fffaf7 0%, #f3f5fa 28%, #edf1f8 100%);
+        font-family: "MiSans", "PingFang SC", "Helvetica Neue", sans-serif;
+        color: var(--text);
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      button {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        cursor: pointer;
+      }
+
+      .prototype {
+        position: relative;
+        width: 360px;
+        height: 800px;
+        overflow: hidden;
+        border-radius: 28px;
+        background: var(--bg);
+        box-shadow: var(--shadow);
+      }
+
+      .screen {
+        position: absolute;
+        inset: 0;
+        display: none;
+        background: var(--bg);
+        animation: fade-in 180ms ease;
+      }
+
+      .screen.active {
+        display: block;
+      }
+
+      .hero-screen {
+        background:
+          radial-gradient(circle at top left, rgba(255, 255, 255, 0.45), transparent 32%),
+          linear-gradient(180deg, #ffe7dc 0%, #fff5f1 30%, #f5f7fa 100%);
+      }
+
+      .status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        height: 32px;
+        padding: 0 16px;
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .status-icons {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        opacity: 0.9;
+      }
+
+      .signal {
+        width: 16px;
+        height: 10px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2px;
+        align-items: end;
+      }
+
+      .signal span {
+        display: block;
+        background: currentColor;
+        border-radius: 999px;
+      }
+
+      .signal span:nth-child(1) { height: 4px; }
+      .signal span:nth-child(2) { height: 6px; }
+      .signal span:nth-child(3) { height: 8px; }
+      .signal span:nth-child(4) { height: 10px; }
+
+      .wifi {
+        width: 14px;
+        height: 10px;
+        border: 2px solid currentColor;
+        border-top-color: transparent;
+        border-left-color: transparent;
+        border-right-color: transparent;
+        border-radius: 50%;
+        position: relative;
+      }
+
+      .wifi::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: -1px;
+        width: 4px;
+        height: 4px;
+        transform: translateX(-50%);
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .battery {
+        position: relative;
+        width: 24px;
+        height: 12px;
+        border: 1.5px solid currentColor;
+        border-radius: 3px;
+      }
+
+      .battery::before {
+        content: "";
+        position: absolute;
+        top: 2px;
+        right: -3px;
+        width: 2px;
+        height: 6px;
+        border-radius: 0 2px 2px 0;
+        background: currentColor;
+      }
+
+      .battery::after {
+        content: "";
+        position: absolute;
+        inset: 2px;
+        width: 14px;
+        border-radius: 1px;
+        background: currentColor;
+      }
+
+      .hero {
+        position: relative;
+        height: 186px;
+        padding: 8px 16px 0;
+        color: #ffffff;
+        background:
+          radial-gradient(circle at 88% 10%, rgba(255, 255, 255, 0.15), transparent 20%),
+          linear-gradient(180deg, #ff7d2e 0%, #ff6b1a 65%, #ff7d39 100%);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        right: -20px;
+        top: 14px;
+        width: 148px;
+        height: 148px;
+        border-radius: 24px;
+        background:
+          linear-gradient(145deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04)),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.16), transparent);
+        transform: rotate(-14deg);
+        opacity: 0.55;
+      }
+
+      .hero-head {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 4px;
+      }
+
+      .hero-title {
+        font-size: 18px;
+        font-weight: 500;
+        line-height: 28px;
+      }
+
+      .icon-button {
+        display: grid;
+        place-items: center;
+        width: 24px;
+        height: 24px;
+        color: inherit;
+      }
+
+      .notify {
+        position: relative;
+      }
+
+      .notify svg {
+        width: 100%;
+        height: 100%;
+      }
+
+      .notify-badge {
+        position: absolute;
+        top: -3px;
+        right: -1px;
+        min-width: 14px;
+        height: 14px;
+        padding: 0 4px;
+        display: grid;
+        place-items: center;
+        border-radius: 999px;
+        background: #ffffff;
+        color: var(--orange);
+        font-size: 11px;
+        font-weight: 600;
+      }
+
+      .quick-actions {
+        position: relative;
+        z-index: 1;
+        margin: 16px 12px 0;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        padding: 18px 12px 12px;
+        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(255, 247, 243, 0.96), rgba(255, 255, 255, 0.9));
+        box-shadow: 0 10px 20px rgba(255, 105, 0, 0.08);
+      }
+
+      .quick-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 4px;
+        border-radius: 12px;
+        transition: transform 160ms ease, background 160ms ease;
+      }
+
+      .quick-item:active,
+      .seg-item:active,
+      .tab-item:active,
+      .card-tap:active,
+      .action-pill:active,
+      .list-row:active,
+      .topbar-btn:active {
+        transform: scale(0.98);
+      }
+
+      .quick-item:hover {
+        background: rgba(255, 255, 255, 0.42);
+      }
+
+      .quick-icon {
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        border-radius: 10px;
+        color: #ffffff;
+        font-size: 18px;
+        font-weight: 700;
+      }
+
+      .blue { background: linear-gradient(180deg, #61a9ff, #3a6fff); }
+      .green { background: linear-gradient(180deg, #41d58a, #23b866); }
+      .orange { background: linear-gradient(180deg, #ffa05f, #ff6e34); }
+
+      .quick-item span {
+        font-size: 10px;
+        line-height: 14px;
+        color: var(--text);
+      }
+
+      .content {
+        padding: 0 12px 88px;
+      }
+
+      .card {
+        margin-top: 10px;
+        border-radius: 16px;
+        background: var(--card);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+      }
+
+      .card-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 40px;
+        padding: 8px 12px 4px;
+      }
+
+      .card-header .title {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 20px;
+      }
+
+      .card-header .meta {
+        font-size: 10px;
+        color: #999999;
+      }
+
+      .card-header .arrow {
+        color: #b7bec8;
+        font-size: 16px;
+        line-height: 1;
+      }
+
+      .header-dot {
+        width: 16px;
+        height: 16px;
+        border-radius: 4px;
+        background: linear-gradient(180deg, #ff8b38, #ff6900);
+      }
+
+      .header-bars {
+        position: relative;
+        width: 16px;
+        height: 16px;
+      }
+
+      .header-bars::before,
+      .header-bars::after,
+      .header-bars span {
+        content: "";
+        position: absolute;
+        bottom: 2px;
+        width: 3px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, #ff9d2f, #ff6900);
+      }
+
+      .header-bars::before {
+        left: 1px;
+        height: 8px;
+      }
+
+      .header-bars span {
+        left: 6px;
+        height: 12px;
+      }
+
+      .header-bars::after {
+        left: 11px;
+        height: 6px;
+      }
+
+      .todo-total {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: #666666;
+        font-size: 12px;
+      }
+
+      .todo-total::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #ff7070;
+      }
+
+      .todo-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 6px 12px;
+      }
+
+      .todo-item p {
+        margin: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        font-size: 12px;
+        line-height: 16px;
+        color: #000000;
+      }
+
+      .action-pill {
+        border: 0.5px solid #ff8514;
+        background: #ffffff;
+        color: #ff8514;
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 12px;
+        line-height: 16px;
+      }
+
+      .todo-expand {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 0 8px;
+        color: #666666;
+        font-size: 10px;
+        line-height: 14px;
+      }
+
+      .dashboard-tabs,
+      .segment {
+        display: inline-flex;
+        margin: 2px 0 0 12px;
+        padding: 2px;
+        border-radius: 999px;
+        background: #f4f4f4;
+      }
+
+      .seg-item {
+        min-width: 52px;
+        padding: 5px 14px;
+        border-radius: 999px;
+        text-align: center;
+        font-size: 12px;
+        line-height: 16px;
+        color: #666666;
+      }
+
+      .seg-item.active {
+        background: #ffffff;
+        color: #ff8514;
+        font-weight: 500;
+      }
+
+      .metric-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        margin: 8px 12px 0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .metric {
+        padding: 10px 12px 8px 0;
+        min-height: 74px;
+        border-top: 0.5px solid var(--line);
+      }
+
+      .metric:nth-child(odd) {
+        padding-left: 0;
+        padding-right: 12px;
+      }
+
+      .metric:nth-child(even) {
+        padding-left: 12px;
+        border-left: 0.5px solid var(--line);
+      }
+
+      .metric-label {
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 16px;
+      }
+
+      .metric-value {
+        margin-top: 4px;
+        font-size: 18px;
+        line-height: 22px;
+        font-weight: 600;
+        letter-spacing: 0.02em;
+      }
+
+      .metric-sub {
+        margin-top: 4px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        align-items: center;
+        font-size: 11px;
+        line-height: 16px;
+      }
+
+      .muted { color: var(--text-secondary); }
+      .danger { color: #ff5959; }
+      .good { color: var(--green); }
+
+      .incentive-body {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        margin: 0 12px 10px;
+      }
+
+      .incentive-col {
+        padding: 10px 12px 8px 0;
+      }
+
+      .incentive-col + .incentive-col {
+        padding-left: 16px;
+        border-left: 0.5px solid var(--line);
+      }
+
+      .incentive-label {
+        color: var(--text-secondary);
+        font-size: 11px;
+        line-height: 18px;
+      }
+
+      .incentive-value {
+        margin-top: 4px;
+        font-size: 18px;
+        line-height: 22px;
+        font-weight: 600;
+      }
+
+      .bottom-nav {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 16px;
+        height: 48px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        align-items: center;
+        background: #ffffff;
+        border-top: 0.5px solid var(--line);
+      }
+
+      .tab-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        color: var(--text-light);
+        font-size: 10px;
+        line-height: 14px;
+      }
+
+      .tab-item.active {
+        color: var(--orange);
+      }
+
+      .nav-icon {
+        width: 18px;
+        height: 18px;
+        border-radius: 5px;
+        border: 1.5px solid currentColor;
+      }
+
+      .home-shape {
+        clip-path: polygon(50% 0%, 100% 38%, 100% 100%, 0% 100%, 0% 38%);
+        background: currentColor;
+        border: 0;
+      }
+
+      .round-shape {
+        border-radius: 50%;
+      }
+
+      .cart-shape {
+        border-radius: 4px 4px 6px 6px;
+        position: relative;
+      }
+
+      .cart-shape::before {
+        content: "";
+        position: absolute;
+        left: 2px;
+        top: -4px;
+        width: 10px;
+        height: 6px;
+        border: 1.5px solid currentColor;
+        border-bottom: 0;
+        border-radius: 6px 6px 0 0;
+      }
+
+      .mine-shape {
+        border-radius: 50%;
+        position: relative;
+      }
+
+      .mine-shape::before {
+        content: "";
+        position: absolute;
+        left: 3px;
+        right: 3px;
+        bottom: -7px;
+        height: 8px;
+        border: 1.5px solid currentColor;
+        border-top: 0;
+        border-radius: 0 0 10px 10px;
+      }
+
+      .home-indicator {
+        position: absolute;
+        left: 50%;
+        bottom: 6px;
+        width: 134px;
+        height: 4px;
+        transform: translateX(-50%);
+        border-radius: 100px;
+        background: #000000;
+      }
+
+      .subpage {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: linear-gradient(180deg, #fff8f4 0%, #f5f6fa 30%);
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 16px 10px;
+      }
+
+      .topbar.compact {
+        padding-top: 0;
+      }
+
+      .topbar-btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--text);
+        font-size: 18px;
+        display: grid;
+        place-items: center;
+        box-shadow: 0 8px 18px rgba(255, 121, 26, 0.08);
+      }
+
+      .topbar-title {
+        flex: 1;
+      }
+
+      .topbar-title strong {
+        display: block;
+        font-size: 16px;
+        line-height: 20px;
+      }
+
+      .topbar-title span {
+        display: block;
+        margin-top: 2px;
+        color: var(--text-light);
+        font-size: 11px;
+        line-height: 16px;
+      }
+
+      .subpage-body {
+        flex: 1;
+        overflow: auto;
+        padding: 4px 12px 88px;
+      }
+
+      .feature-banner {
+        margin-top: 4px;
+        padding: 18px 16px;
+        border-radius: 18px;
+        color: #ffffff;
+        background: linear-gradient(135deg, #ff9138, #ff6a00);
+        box-shadow: 0 16px 28px rgba(255, 105, 0, 0.24);
+      }
+
+      .feature-banner h2 {
+        margin: 0;
+        font-size: 20px;
+        line-height: 26px;
+      }
+
+      .feature-banner p {
+        margin: 8px 0 0;
+        font-size: 12px;
+        line-height: 17px;
+        opacity: 0.92;
+      }
+
+      .panel {
+        margin-top: 12px;
+        padding: 14px 12px;
+        border-radius: 16px;
+        background: var(--card);
+      }
+
+      .panel h3 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        line-height: 20px;
+      }
+
+      .list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .list-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #f7f8fb;
+      }
+
+      .list-row strong {
+        display: block;
+        font-size: 13px;
+        line-height: 18px;
+      }
+
+      .list-row span {
+        display: block;
+        margin-top: 2px;
+        color: var(--text-secondary);
+        font-size: 11px;
+        line-height: 16px;
+      }
+
+      .tag {
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: var(--orange-soft);
+        color: var(--orange);
+        font-size: 11px;
+        line-height: 14px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .stat-card {
+        padding: 12px;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #ffffff, #fafbff);
+        border: 1px solid #eff1f5;
+      }
+
+      .stat-card small {
+        color: var(--text-secondary);
+        font-size: 11px;
+      }
+
+      .stat-card strong {
+        display: block;
+        margin-top: 6px;
+        font-size: 18px;
+        line-height: 22px;
+      }
+
+      .primary-btn,
+      .secondary-btn {
+        width: 100%;
+        height: 42px;
+        border-radius: 14px;
+        font-size: 14px;
+        font-weight: 600;
+      }
+
+      .primary-btn {
+        background: linear-gradient(180deg, #ff8c34, #ff6900);
+        color: #ffffff;
+      }
+
+      .secondary-btn {
+        border: 1px solid #ffd7bf;
+        background: #fff7f1;
+        color: var(--orange);
+      }
+
+      .btn-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .search-box {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        padding: 10px 12px;
+        border-radius: 14px;
+        background: #ffffff;
+      }
+
+      .search-box input {
+        flex: 1;
+        border: 0;
+        outline: 0;
+        background: transparent;
+        color: var(--text);
+        font-size: 13px;
+      }
+
+      .muted-box {
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #f7f8fb;
+        color: var(--text-secondary);
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: flex-end;
+        justify-content: center;
+        background: rgba(18, 24, 38, 0.42);
+        backdrop-filter: blur(3px);
+        z-index: 30;
+      }
+
+      .overlay.active {
+        display: flex;
+      }
+
+      .sheet {
+        width: 100%;
+        padding: 14px 12px 16px;
+        border-radius: 20px 20px 0 0;
+        background: #ffffff;
+        animation: sheet-up 180ms ease;
+      }
+
+      .sheet-handle {
+        width: 40px;
+        height: 4px;
+        margin: 0 auto 12px;
+        border-radius: 999px;
+        background: #d8dde6;
+      }
+
+      .sheet h3 {
+        margin: 0;
+        font-size: 16px;
+        line-height: 22px;
+      }
+
+      .sheet p {
+        margin: 8px 0 0;
+        color: var(--text-secondary);
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      .toast {
+        position: absolute;
+        left: 50%;
+        bottom: 78px;
+        transform: translateX(-50%) translateY(18px);
+        min-width: 180px;
+        max-width: 280px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        background: rgba(31, 39, 51, 0.92);
+        color: #ffffff;
+        font-size: 12px;
+        line-height: 16px;
+        text-align: center;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 180ms ease, transform 180ms ease;
+        z-index: 40;
+      }
+
+      .toast.active {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes sheet-up {
+        from { transform: translateY(18px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="prototype" id="app">
+      <section class="screen hero-screen active" data-screen="home">
+        <div class="hero">
+          <div class="status-bar">
+            <span>2:36</span>
+            <div class="status-icons">
+              <div class="signal"><span></span><span></span><span></span><span></span></div>
+              <div class="wifi"></div>
+              <div class="battery"></div>
+            </div>
+          </div>
+          <div class="hero-head">
+            <div class="hero-title">Xiaomi Channel</div>
+            <button class="icon-button notify" data-action="open-notice" aria-label="通知">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <path d="M12 4a5 5 0 0 1 5 5v3.4l1.5 2.6H5.5L7 12.4V9a5 5 0 0 1 5-5Z"></path>
+                <path d="M10 18a2 2 0 0 0 4 0"></path>
+              </svg>
+              <span class="notify-badge" id="notice-count">2</span>
+            </button>
+          </div>
+          <div class="quick-actions">
+            <button class="quick-item" data-screen-target="upload">
+              <div class="quick-icon blue">→</div>
+              <span>SO Upload</span>
+            </button>
+            <button class="quick-item" data-screen-target="search">
+              <div class="quick-icon green">□</div>
+              <span>SO Search</span>
+            </button>
+            <button class="quick-item" data-screen-target="requests">
+              <div class="quick-icon orange">☐</div>
+              <span>ST Request List</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="content">
+          <section class="card">
+            <button class="card-header card-tap" data-screen-target="requests">
+              <div class="header-dot"></div>
+              <div class="title">Todo List</div>
+              <div class="todo-total"><span id="todo-count">8 in total</span></div>
+              <div class="arrow">›</div>
+            </button>
+            <div id="todo-list"></div>
+            <button class="todo-expand" data-action="toggle-todos">
+              <span id="todo-expand-label">Full expansion</span>
+              <span id="todo-expand-arrow">⌄</span>
+            </button>
+          </section>
+
+          <section class="card">
+            <button class="card-header card-tap" data-screen-target="dashboard">
+              <div class="header-bars"><span></span></div>
+              <div class="title">PSI Dashboard</div>
+              <div class="meta" id="dashboard-date">WIB (UTC+7): 2024-08-06</div>
+              <div class="arrow">›</div>
+            </button>
+            <div class="dashboard-tabs" id="dashboard-tabs"></div>
+            <div class="metric-grid" id="dashboard-metrics"></div>
+          </section>
+
+          <section class="card">
+            <button class="card-header card-tap" data-screen-target="incentive">
+              <div class="header-dot"></div>
+              <div class="title">Incentive</div>
+              <div class="meta">2024-07</div>
+              <div class="arrow">›</div>
+            </button>
+            <div class="incentive-body">
+              <div class="incentive-col">
+                <div class="incentive-label">Estimated Amount</div>
+                <div class="incentive-value">Rp 1,500</div>
+              </div>
+              <div class="incentive-col">
+                <div class="incentive-label">ACH</div>
+                <div class="incentive-value">40%</div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="screen subpage" data-screen="upload">
+        <div class="hero" style="height: 112px; padding-bottom: 10px;">
+          <div class="status-bar">
+            <span>2:36</span>
+            <div class="status-icons">
+              <div class="signal"><span></span><span></span><span></span><span></span></div>
+              <div class="wifi"></div>
+              <div class="battery"></div>
+            </div>
+          </div>
+          <div class="topbar compact">
+            <button class="topbar-btn" data-action="go-home">‹</button>
+            <div class="topbar-title">
+              <strong>SO Upload</strong>
+              <span>Submit daily sales order files for reconciliation.</span>
+            </div>
+          </div>
+        </div>
+        <div class="subpage-body">
+          <div class="feature-banner">
+            <h2>Upload today’s sell-out package</h2>
+            <p>Support CSV, XLSX and manual batch edit. Current target: Indonesia Phone Channel.</p>
+          </div>
+          <div class="panel">
+            <h3>Upload Queue</h3>
+            <div class="list">
+              <button class="list-row" data-action="toast" data-message="SO_Jakarta_0806.xlsx queued successfully.">
+                <div><strong>SO_Jakarta_0806.xlsx</strong><span>Updated 2 minutes ago · 124 rows</span></div>
+                <div class="tag">Ready</div>
+              </button>
+              <button class="list-row" data-action="toast" data-message="SO_Surabaya_0806.csv uploaded to staging area.">
+                <div><strong>SO_Surabaya_0806.csv</strong><span>Pending validation · 88 rows</span></div>
+                <div class="tag">Check</div>
+              </button>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Submission Actions</h3>
+            <div class="btn-row">
+              <button class="secondary-btn" data-action="toast" data-message="Template downloaded.">Download Template</button>
+              <button class="primary-btn" data-action="toast" data-message="Upload flow started.">Start Upload</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen subpage" data-screen="search">
+        <div class="hero" style="height: 112px; padding-bottom: 10px;">
+          <div class="status-bar">
+            <span>2:36</span>
+            <div class="status-icons">
+              <div class="signal"><span></span><span></span><span></span><span></span></div>
+              <div class="wifi"></div>
+              <div class="battery"></div>
+            </div>
+          </div>
+          <div class="topbar compact">
+            <button class="topbar-btn" data-action="go-home">‹</button>
+            <div class="topbar-title">
+              <strong>SO Search</strong>
+              <span>Track channel performance by market, dealer and product.</span>
+            </div>
+          </div>
+        </div>
+        <div class="subpage-body">
+          <div class="search-box">
+            <span>⌕</span>
+            <input id="search-input" placeholder="Search dealer or product keyword" />
+            <button data-action="run-search">Search</button>
+          </div>
+          <div class="panel">
+            <h3>Quick Filters</h3>
+            <div class="segment" id="search-filters">
+              <button class="seg-item active" data-filter="today">Today</button>
+              <button class="seg-item" data-filter="week">This Week</button>
+              <button class="seg-item" data-filter="month">MTD</button>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Recommended Results</h3>
+            <div class="list" id="search-results"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen subpage" data-screen="requests">
+        <div class="hero" style="height: 112px; padding-bottom: 10px;">
+          <div class="status-bar">
+            <span>2:36</span>
+            <div class="status-icons">
+              <div class="signal"><span></span><span></span><span></span><span></span></div>
+              <div class="wifi"></div>
+              <div class="battery"></div>
+            </div>
+          </div>
+          <div class="topbar compact">
+            <button class="topbar-btn" data-action="go-home">‹</button>
+            <div class="topbar-title">
+              <strong>ST Request List</strong>
+              <span>Manage transfer stock approval, invoice and delivery tasks.</span>
+            </div>
+          </div>
+        </div>
+        <div class="subpage-body">
+          <div class="panel">
+            <h3>Open Requests</h3>
+            <div class="list" id="request-list"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen subpage" data-screen="dashboard">
+        <div class="hero" style="height: 112px; padding-bottom: 10px;">
+          <div class="status-bar">
+            <span>2:36</span>
+            <div class="status-icons">
+              <div class="signal"><span></span><span></span><span></span><span></span></div>
+              <div class="wifi"></div>
+              <div class="battery"></div>
+            </div>
+          </div>
+          <div class="topbar compact">
+            <button class="topbar-btn" data-action="go-home">‹</button>
+            <div class="topbar-title">
+              <strong>PSI Dashboard</strong>
+              <span>Daily sales, activation and inventory snapshot.</span>
+            </div>
+          </div>
+        </div>
+        <div class="subpage-body">
+          <div class="panel">
+            <h3>Channel View</h3>
+            <div class="segment" id="dashboard-view-tabs"></div>
+            <div class="stats" id="dashboard-detail-stats" style="margin-top: 12px;"></div>
+          </div>
+          <div class="panel">
+            <h3>Action Suggestion</h3>
+            <div class="muted-box" id="dashboard-insight"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen subpage" data-screen="incentive">
+        <div class="hero" style="height: 112px; padding-bottom: 10px;">
+          <div class="status-bar">
+            <span>2:36</span>
+            <div class="status-icons">
+              <div class="signal"><span></span><span></span><span></span><span></span></div>
+              <div class="wifi"></div>
+              <div class="battery"></div>
+            </div>
+          </div>
+          <div class="topbar compact">
+            <button class="topbar-btn" data-action="go-home">‹</button>
+            <div class="topbar-title">
+              <strong>Incentive Center</strong>
+              <span>Track estimated rebate amount and monthly achievement.</span>
+            </div>
+          </div>
+        </div>
+        <div class="subpage-body">
+          <div class="feature-banner">
+            <h2>40% ACH in July</h2>
+            <p>You are 10% away from unlocking the next incentive milestone.</p>
+          </div>
+          <div class="panel">
+            <h3>Current Progress</h3>
+            <div class="stats">
+              <div class="stat-card"><small>Estimated Amount</small><strong>Rp 1,500</strong></div>
+              <div class="stat-card"><small>Achievement</small><strong>40%</strong></div>
+            </div>
+          </div>
+          <div class="panel">
+            <h3>Suggested Actions</h3>
+            <div class="list">
+              <button class="list-row" data-action="toast" data-message="Focus model list exported.">
+                <div><strong>Export Focus Model</strong><span>Prepare promotion list for top dealers</span></div>
+                <div class="tag">Export</div>
+              </button>
+              <button class="list-row" data-action="toast" data-message="Incentive breakdown shared with sales team.">
+                <div><strong>Share Breakdown</strong><span>Send current incentive structure to field team</span></div>
+                <div class="tag">Send</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen subpage" data-screen="purchase">
+        <div class="hero" style="height: 112px; padding-bottom: 10px;">
+          <div class="status-bar">
+            <span>2:36</span>
+            <div class="status-icons">
+              <div class="signal"><span></span><span></span><span></span><span></span></div>
+              <div class="wifi"></div>
+              <div class="battery"></div>
+            </div>
+          </div>
+          <div class="topbar compact">
+            <button class="topbar-btn" data-action="go-home">‹</button>
+            <div class="topbar-title">
+              <strong>Purchase</strong>
+              <span>View procurement plan and replenish low inventory items.</span>
+            </div>
+          </div>
+        </div>
+        <div class="subpage-body">
+          <div class="panel">
+            <h3>Recommended Replenishment</h3>
+            <div class="list">
+              <button class="list-row" data-action="toast" data-message="Purchase request draft created for Redmi Note 14.">
+                <div><strong>Redmi Note 14</strong><span>Inventory 7 days left · Need 320 units</span></div>
+                <div class="tag">Create</div>
+              </button>
+              <button class="list-row" data-action="toast" data-message="Purchase request draft created for Pad 7.">
+                <div><strong>Pad 7</strong><span>Inventory 11 days left · Need 140 units</span></div>
+                <div class="tag">Create</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen subpage" data-screen="my">
+        <div class="hero" style="height: 112px; padding-bottom: 10px;">
+          <div class="status-bar">
+            <span>2:36</span>
+            <div class="status-icons">
+              <div class="signal"><span></span><span></span><span></span><span></span></div>
+              <div class="wifi"></div>
+              <div class="battery"></div>
+            </div>
+          </div>
+          <div class="topbar compact">
+            <button class="topbar-btn" data-action="go-home">‹</button>
+            <div class="topbar-title">
+              <strong>My Workspace</strong>
+              <span>IR manager profile and collaboration settings.</span>
+            </div>
+          </div>
+        </div>
+        <div class="subpage-body">
+          <div class="panel">
+            <h3>Account</h3>
+            <div class="list">
+              <button class="list-row" data-action="toast" data-message="Profile synced from Xiaomi account center.">
+                <div><strong>Daniel Ye</strong><span>IR Manager · Xiaomi Indonesia</span></div>
+                <div class="tag">Sync</div>
+              </button>
+              <button class="list-row" data-action="toast" data-message="Notification preferences updated.">
+                <div><strong>Notification Preference</strong><span>Todo push + daily digest enabled</span></div>
+                <div class="tag">Edit</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <nav class="bottom-nav">
+        <button class="tab-item active" data-nav="home">
+          <div class="nav-icon home-shape"></div>
+          <span>Home</span>
+        </button>
+        <button class="tab-item" data-nav="incentive">
+          <div class="nav-icon round-shape"></div>
+          <span>Incentive</span>
+        </button>
+        <button class="tab-item" data-nav="purchase">
+          <div class="nav-icon cart-shape"></div>
+          <span>Purchase</span>
+        </button>
+        <button class="tab-item" data-nav="my">
+          <div class="nav-icon mine-shape"></div>
+          <span>My</span>
+        </button>
+      </nav>
+
+      <div class="home-indicator"></div>
+
+      <div class="overlay" id="sheet-overlay">
+        <div class="sheet" id="sheet">
+          <div class="sheet-handle"></div>
+          <h3 id="sheet-title">Detail</h3>
+          <p id="sheet-copy">Interactive prototype detail.</p>
+          <div class="btn-row" style="margin-top: 16px;">
+            <button class="secondary-btn" id="sheet-secondary">Cancel</button>
+            <button class="primary-btn" id="sheet-primary">Confirm</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="toast" id="toast"></div>
+    </div>
+
+    <script>
+      const state = {
+        activeScreen: "home",
+        showAllTodos: false,
+        activeDashboardTab: "Phone",
+        activeDashboardDetail: "Phone",
+        notices: [
+          "2 new approval reminders waiting for you.",
+          "PSI data for Jakarta has been refreshed.",
+        ],
+        todos: [
+          { id: 1, title: "There is a new Payment to be conciliated.", action: "To Deal", status: "open" },
+          { id: 2, title: "There is a Payment waiting for Invoice submission", action: "To Deal", status: "open" },
+          { id: 3, title: "Distributor SO upload is overdue by 1 day", action: "Remind", status: "open" },
+          { id: 4, title: "Pad stock transfer request requires approval", action: "Review", status: "open" },
+          { id: 5, title: "Focus model incentive data has changed", action: "View", status: "open" },
+        ],
+      };
+
+      const dashboardData = {
+        Phone: {
+          short: [
+            { label: "ST MTD", value: "51,778K", sub: [["YoY", "muted"], ["-", "muted"]] },
+            { label: "SO MTD", value: "51,778K", sub: [["YoY", "muted"], ["-", "muted"]] },
+            { label: "Sales Activation", value: "51,778K", sub: [["YoY", "muted"], ["+2.99%", "danger"]] },
+            { label: "Inventory", value: "51,778K", sub: [["Dos 28", "muted"], ["51", "danger"], ["Dos 7", "muted"], ["54", ""]] },
+          ],
+          detail: [
+            { label: "Sell-out Target", value: "89%", tone: "good" },
+            { label: "Top Dealer", value: "Jakarta 3C", tone: "" },
+            { label: "Inventory Risk", value: "Low", tone: "good" },
+            { label: "Focus SKU", value: "Redmi Note 14", tone: "" },
+          ],
+          insight: "Phone channel is stable. Activation growth is positive, but focus models still need stronger push in Surabaya and Medan.",
+        },
+        Pad: {
+          short: [
+            { label: "ST MTD", value: "13,210K", sub: [["YoY", "muted"], ["+1.8%", "good"]] },
+            { label: "SO MTD", value: "12,944K", sub: [["YoY", "muted"], ["+0.6%", "good"]] },
+            { label: "Sales Activation", value: "10,204K", sub: [["YoY", "muted"], ["-3.1%", "danger"]] },
+            { label: "Inventory", value: "9,871K", sub: [["Dos 28", "muted"], ["34", ""], ["Dos 7", "muted"], ["18", ""]] },
+          ],
+          detail: [
+            { label: "Sell-out Target", value: "74%", tone: "" },
+            { label: "Top Dealer", value: "Bandung Hub", tone: "" },
+            { label: "Inventory Risk", value: "Medium", tone: "danger" },
+            { label: "Focus SKU", value: "Pad 7", tone: "" },
+          ],
+          insight: "Pad inventory is tighter than expected. Suggested action is to prioritize replenishment before the next distributor campaign.",
+        },
+        AIoT: {
+          short: [
+            { label: "ST MTD", value: "8,412K", sub: [["YoY", "muted"], ["+7.6%", "good"]] },
+            { label: "SO MTD", value: "7,944K", sub: [["YoY", "muted"], ["+5.3%", "good"]] },
+            { label: "Sales Activation", value: "6,120K", sub: [["YoY", "muted"], ["+2.1%", "good"]] },
+            { label: "Inventory", value: "6,508K", sub: [["Dos 28", "muted"], ["27", ""], ["Dos 7", "muted"], ["12", ""]] },
+          ],
+          detail: [
+            { label: "Sell-out Target", value: "93%", tone: "good" },
+            { label: "Top Dealer", value: "Bali Retail", tone: "" },
+            { label: "Inventory Risk", value: "Low", tone: "good" },
+            { label: "Focus SKU", value: "Smart Band 9", tone: "" },
+          ],
+          insight: "AIoT is the healthiest category this month, driven by wearables and smart home accessories. Good candidate for incremental campaigns.",
+        },
+      };
+
+      const searchResults = [
+        { title: "Xiaomi 3C Jakarta", detail: "Dealer · Last update 20 min ago" },
+        { title: "Redmi Note 14", detail: "Product · SO growth +12.4%" },
+        { title: "Bandung Pad Channel", detail: "Region · Inventory 11 days left" },
+      ];
+
+      const screens = [...document.querySelectorAll(".screen")];
+      const navItems = [...document.querySelectorAll("[data-nav]")];
+      const overlay = document.getElementById("sheet-overlay");
+      const toast = document.getElementById("toast");
+      const todoList = document.getElementById("todo-list");
+      const todoCount = document.getElementById("todo-count");
+      const todoExpandLabel = document.getElementById("todo-expand-label");
+      const todoExpandArrow = document.getElementById("todo-expand-arrow");
+      const dashboardTabs = document.getElementById("dashboard-tabs");
+      const dashboardMetrics = document.getElementById("dashboard-metrics");
+      const dashboardViewTabs = document.getElementById("dashboard-view-tabs");
+      const dashboardDetailStats = document.getElementById("dashboard-detail-stats");
+      const dashboardInsight = document.getElementById("dashboard-insight");
+      const requestList = document.getElementById("request-list");
+      const searchResultsEl = document.getElementById("search-results");
+      const noticeCount = document.getElementById("notice-count");
+      const sheetTitle = document.getElementById("sheet-title");
+      const sheetCopy = document.getElementById("sheet-copy");
+      const sheetPrimary = document.getElementById("sheet-primary");
+      const sheetSecondary = document.getElementById("sheet-secondary");
+
+      let sheetPrimaryHandler = null;
+
+      function showToast(message) {
+        toast.textContent = message;
+        toast.classList.add("active");
+        clearTimeout(showToast.timer);
+        showToast.timer = setTimeout(() => toast.classList.remove("active"), 1800);
+      }
+
+      function openSheet({ title, copy, primaryText = "Confirm", secondaryText = "Cancel", onPrimary }) {
+        sheetTitle.textContent = title;
+        sheetCopy.textContent = copy;
+        sheetPrimary.textContent = primaryText;
+        sheetSecondary.textContent = secondaryText;
+        sheetPrimaryHandler = onPrimary || null;
+        overlay.classList.add("active");
+      }
+
+      function closeSheet() {
+        overlay.classList.remove("active");
+        sheetPrimaryHandler = null;
+      }
+
+      function switchScreen(name) {
+        state.activeScreen = name;
+        screens.forEach((screen) => {
+          screen.classList.toggle("active", screen.dataset.screen === name);
+        });
+        navItems.forEach((item) => {
+          item.classList.toggle("active", item.dataset.nav === name);
+        });
+      }
+
+      function renderTodos() {
+        const visible = state.showAllTodos ? state.todos : state.todos.slice(0, 2);
+        todoList.innerHTML = visible
+          .map(
+            (todo) => `
+              <div class="todo-item">
+                <p>${todo.title}</p>
+                <button class="action-pill" data-todo-action="${todo.id}">${todo.action}</button>
+              </div>
+            `
+          )
+          .join("");
+        todoCount.textContent = `${state.todos.length} in total`;
+        todoExpandLabel.textContent = state.showAllTodos ? "Collapse list" : "Full expansion";
+        todoExpandArrow.textContent = state.showAllTodos ? "⌃" : "⌄";
+      }
+
+      function renderDashboardShort() {
+        const items = dashboardData[state.activeDashboardTab].short;
+        dashboardMetrics.innerHTML = items
+          .map(
+            (item) => `
+              <div class="metric">
+                <div class="metric-label">${item.label}</div>
+                <div class="metric-value">${item.value}</div>
+                <div class="metric-sub">
+                  ${item.sub
+                    .map(([text, tone]) => `<span class="${tone}">${text}</span>`)
+                    .join("")}
+                </div>
+              </div>
+            `
+          )
+          .join("");
+      }
+
+      function renderDashboardTabs() {
+        const tabs = Object.keys(dashboardData);
+        dashboardTabs.innerHTML = tabs
+          .map(
+            (tab) => `<button class="seg-item ${tab === state.activeDashboardTab ? "active" : ""}" data-dashboard-tab="${tab}">${tab}</button>`
+          )
+          .join("");
+        dashboardViewTabs.innerHTML = tabs
+          .map(
+            (tab) => `<button class="seg-item ${tab === state.activeDashboardDetail ? "active" : ""}" data-dashboard-detail-tab="${tab}">${tab}</button>`
+          )
+          .join("");
+      }
+
+      function renderDashboardDetail() {
+        const current = dashboardData[state.activeDashboardDetail];
+        dashboardDetailStats.innerHTML = current.detail
+          .map(
+            (item) => `
+              <div class="stat-card">
+                <small>${item.label}</small>
+                <strong class="${item.tone}">${item.value}</strong>
+              </div>
+            `
+          )
+          .join("");
+        dashboardInsight.textContent = current.insight;
+      }
+
+      function renderRequests() {
+        requestList.innerHTML = state.todos
+          .map(
+            (todo) => `
+              <button class="list-row" data-request-item="${todo.id}">
+                <div><strong>${todo.title}</strong><span>Status: ${todo.status === "done" ? "Completed" : "Pending action"}</span></div>
+                <div class="tag">${todo.status === "done" ? "Done" : todo.action}</div>
+              </button>
+            `
+          )
+          .join("");
+      }
+
+      function renderSearchResults() {
+        searchResultsEl.innerHTML = searchResults
+          .map(
+            (item) => `
+              <button class="list-row" data-action="toast" data-message="${item.title} opened in detail mode.">
+                <div><strong>${item.title}</strong><span>${item.detail}</span></div>
+                <div class="tag">Open</div>
+              </button>
+            `
+          )
+          .join("");
+      }
+
+      function markTodoDone(id) {
+        const item = state.todos.find((todo) => todo.id === id);
+        if (!item) return;
+        item.status = "done";
+        item.action = "Done";
+        renderTodos();
+        renderRequests();
+        showToast("Task marked as completed.");
+      }
+
+      renderTodos();
+      renderDashboardTabs();
+      renderDashboardShort();
+      renderDashboardDetail();
+      renderRequests();
+      renderSearchResults();
+
+      document.addEventListener("click", (event) => {
+        const target = event.target.closest("button");
+        if (!target) return;
+
+        if (target.dataset.screenTarget) {
+          switchScreen(target.dataset.screenTarget);
+          return;
+        }
+
+        if (target.dataset.nav) {
+          switchScreen(target.dataset.nav);
+          return;
+        }
+
+        if (target.dataset.action === "go-home") {
+          switchScreen("home");
+          return;
+        }
+
+        if (target.dataset.action === "toggle-todos") {
+          state.showAllTodos = !state.showAllTodos;
+          renderTodos();
+          return;
+        }
+
+        if (target.dataset.action === "open-notice") {
+          openSheet({
+            title: "Notifications",
+            copy: state.notices.join(" "),
+            primaryText: "Mark all read",
+            secondaryText: "Close",
+            onPrimary: () => {
+              state.notices = ["No new notices. Dashboard is up to date."];
+              noticeCount.textContent = "0";
+              closeSheet();
+              showToast("All notices marked as read.");
+            },
+          });
+          return;
+        }
+
+        if (target.dataset.todoAction) {
+          const todoId = Number(target.dataset.todoAction);
+          const todo = state.todos.find((item) => item.id === todoId);
+          openSheet({
+            title: "Handle Todo",
+            copy: todo ? todo.title : "This task requires attention.",
+            primaryText: "Complete",
+            secondaryText: "Later",
+            onPrimary: () => {
+              markTodoDone(todoId);
+              closeSheet();
+            },
+          });
+          return;
+        }
+
+        if (target.dataset.requestItem) {
+          const todoId = Number(target.dataset.requestItem);
+          const todo = state.todos.find((item) => item.id === todoId);
+          openSheet({
+            title: "Request Detail",
+            copy: todo ? `${todo.title} Current status: ${todo.status === "done" ? "completed" : "pending"}.` : "Request detail.",
+            primaryText: todo && todo.status === "done" ? "Done" : "Approve",
+            secondaryText: "Close",
+            onPrimary: () => {
+              if (todo && todo.status !== "done") {
+                markTodoDone(todoId);
+              } else {
+                showToast("Nothing else required.");
+              }
+              closeSheet();
+            },
+          });
+          return;
+        }
+
+        if (target.dataset.dashboardTab) {
+          state.activeDashboardTab = target.dataset.dashboardTab;
+          renderDashboardTabs();
+          renderDashboardShort();
+          return;
+        }
+
+        if (target.dataset.dashboardDetailTab) {
+          state.activeDashboardDetail = target.dataset.dashboardDetailTab;
+          renderDashboardTabs();
+          renderDashboardDetail();
+          return;
+        }
+
+        if (target.dataset.filter) {
+          document.querySelectorAll("#search-filters .seg-item").forEach((node) => {
+            node.classList.toggle("active", node.dataset.filter === target.dataset.filter);
+          });
+          showToast(`Filter switched to ${target.textContent}.`);
+          return;
+        }
+
+        if (target.dataset.action === "run-search") {
+          const input = document.getElementById("search-input");
+          const query = input.value.trim();
+          showToast(query ? `Search results updated for "${query}".` : "Showing default recommended results.");
+          return;
+        }
+
+        if (target.dataset.action === "toast") {
+          showToast(target.dataset.message || "Action completed.");
+          return;
+        }
+      });
+
+      overlay.addEventListener("click", (event) => {
+        if (event.target === overlay) closeSheet();
+      });
+
+      sheetSecondary.addEventListener("click", closeSheet);
+      sheetPrimary.addEventListener("click", () => {
+        if (sheetPrimaryHandler) sheetPrimaryHandler();
+      });
+    </script>
+  </body>
+</html>
